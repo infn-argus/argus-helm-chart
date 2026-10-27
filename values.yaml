@@ -434,6 +434,12 @@ argusMcp:
       baseUrl: ""
 
     logbook:
+      # Where logbook *reads* come from (get_alarm_history, diagnose_device,
+      # machine_summary): "olog" queries baseUrl below; "knowledge_hub" searches
+      # the Logbook Entry documents the ARGUS Knowledge Hub keeps of that Olog
+      # (see knowledgeHub: below). Posting (create_logbook_entry) always goes to
+      # Olog, so keep baseUrl set if entries should still be postable.
+      backend: "olog" # olog | knowledge_hub
       baseUrl: ""
       username: ""
       passwordSecretKey: "LOGBOOK_PASSWORD"
@@ -456,7 +462,8 @@ argusMcp:
       # to an existing RAGFLOW deployment instead (see ragflow: below). Both
       # implement the same search_documentation tool contract, so switching
       # is a config-only change.
-      backend: "local" # local | ragflow
+      # "knowledge_hub" searches the ARGUS Knowledge Hub instead (knowledgeHub: below).
+      backend: "local" # local | ragflow | knowledge_hub
       docsPath: "/data/docs"
       indexPath: "/data/docs/.index"
       persistence:
@@ -485,6 +492,28 @@ argusMcp:
       # automatically, once one exists with that name -- see
       # configmap-env.yaml. Set explicitly here to override that default.
       datasetNames: ""
+      timeoutSeconds: 20
+
+    # Where list_beamline_devices reads the device inventory: "yaml" parses
+    # the beamline's epik8s deploy YAML from its git repo (git: below);
+    # "knowledge_hub" reads the Control Device records the ARGUS Knowledge Hub
+    # imported from that same configuration (knowledgeHub: below).
+    inventory:
+      backend: "yaml" # yaml | knowledge_hub
+
+    # The ARGUS Knowledge Hub's MCP server (argus-knowledge-hub), used by
+    # whichever of inventory/documentation/logbook select "knowledge_hub".
+    # ARGUS talks to it as an MCP client, with a personal access token made
+    # in the hub (My account -> Personal access tokens). To read every
+    # workspace, an administrator makes it with the Read and Administer
+    # scopes and no fixed workspace; a read-only token reads only its owner's
+    # workspaces. The token itself goes in the credentials Secret under
+    # tokenSecretKey, never here.
+    knowledgeHub:
+      url: "" # e.g. https://argus-hub-api.example.org/mcp
+      tokenSecretKey: "KNOWLEDGE_HUB_TOKEN"
+      # Workspace ids to ask in; empty = every workspace the token may read.
+      workspaces: []
       timeoutSeconds: 20
 
     # Read-only: config history (git log/diff on tracked YAML files) and
@@ -568,6 +597,7 @@ secrets:
   #  ELASTIC_API_KEY: "..."
   #  OPENID_CLIENT_SECRET: "..."
   #  RAGFLOW_API_KEY: "..."
+  #  KNOWLEDGE_HUB_TOKEN: "argus_pat_..."
   #  LANGFUSE_PUBLIC_KEY: "pk-lf-..." # generated from the Langfuse UI, see
   #  LANGFUSE_SECRET_KEY: "sk-lf-..." # librechat.librechat.configEnv above
   #  LANGFUSE_MCP_AUTH_HEADER: "Basic ..." # see mcpServers.langfuse above

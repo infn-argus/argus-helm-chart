@@ -114,6 +114,26 @@ data:
   RAGFLOW_TIMEOUT_SECONDS: {{ $b.ragflow.timeoutSeconds | quote }}
   {{- end }}
 
+  {{/*
+  Knowledge source switches (ARGUS's ADR 0004): each area reads from its
+  legacy backend or from the ARGUS Knowledge Hub's MCP server. Defaulted
+  here too so a values file written before these keys existed renders the
+  legacy behavior unchanged.
+  */}}
+  INVENTORY_BACKEND: {{ (($b.inventory).backend) | default "yaml" | quote }}
+  LOGBOOK_BACKEND: {{ $b.logbook.backend | default "olog" | quote }}
+  {{- with $b.knowledgeHub }}
+  {{- if .url }}
+  KNOWLEDGE_HUB_URL: {{ .url | quote }}
+  {{- end }}
+  {{- if .workspaces }}
+  KNOWLEDGE_HUB_WORKSPACES: {{ join "," .workspaces | quote }}
+  {{- end }}
+  {{- if .timeoutSeconds }}
+  KNOWLEDGE_HUB_TIMEOUT_SECONDS: {{ .timeoutSeconds | quote }}
+  {{- end }}
+  {{- end }}
+
   {{- if $b.git.github.baseUrl }}
   GITHUB_BASE_URL: {{ $b.git.github.baseUrl | quote }}
   {{- end }}
