@@ -6,7 +6,7 @@ AI control-room assistant, with:
 - **Multiple LLM backends**, declared as a list (`llm.endpoints`) instead
   of hand-editing `librechat.yaml`.
 - **Multiple MCP servers**, generically pluggable (`mcpServers`), with
-  [ARGUS](https://github.com/infn-epics/argus-mcp-server) — the
+  [ARGUS](https://github.com/infn-argus/argus-mcp-server) — the
   accelerator-control MCP server — getting first-class treatment: this
   chart deploys it (Deployment/Service/RBAC) and wires its 8 backend
   services (EPICS, Archiver Appliance, ChannelFinder, Kubernetes, ArgoCD,

@@ -7,7 +7,7 @@ description: >
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
-home: https://github.com/infn-epics/argus-mcp-server
+home: https://github.com/infn-argus/argus-mcp-server
 icon: https://www.librechat.ai/librechat_alt.svg
 keywords:
   - librechat
