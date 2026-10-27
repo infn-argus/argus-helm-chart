@@ -386,6 +386,12 @@ argusMcp:
   # librechat.yaml as `type: sse`
   transport: "sse"
 
+  # Headers this chart's own LibreChat sends to this ARGUS server (its
+  # "argus" mcpServers entry), e.g.
+  #   X-Argus-Confirm-Writes: "true"   # write tools confirmed in two steps
+  #   X-Argus-User-Token: "{{LIBRECHAT_OPENID_ACCESS_TOKEN}}"  # act as the user in Olog
+  librechatHeaders: {}
+
   resources: {}
   #  limits: { cpu: 500m, memory: 512Mi }
   #  requests: { cpu: 100m, memory: 256Mi }

@@ -124,6 +124,18 @@ data:
         chatMenu: true
         title: "ARGUS"
         description: "Accelerator control-room operations: PVs, devices, diagnostics, IOCs, history, documentation."
+        {{- /*
+        argusMcp.librechatHeaders: static headers, or LibreChat placeholders
+        resolved per user, sent with every call - e.g. X-Argus-Confirm-Writes
+        (argus-mcp-server's two-step write confirmation) and X-Argus-User-Token:
+        "{{LIBRECHAT_OPENID_ACCESS_TOKEN}}" (the user's own token, passed on to
+        Olog). OpenID placeholders resolve from the user's session, unlike the
+        body ones below, so they keep "Initialize" working.
+        */}}
+        {{- with .Values.argusMcp.librechatHeaders }}
+        headers:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{/*
         Deliberately NOT setting per-tool-call correlation headers here
         (X-Librechat-Conversation-Id/Message-Id via LibreChat's
