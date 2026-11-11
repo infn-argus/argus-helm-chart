@@ -521,6 +521,12 @@ argusMcp:
       # Workspace ids to ask in; empty = every workspace the token may read.
       workspaces: []
       timeoutSeconds: 20
+      # Ask the hub as the person behind each tool call: their INFN AAI access
+      # token (X-Argus-User-Token, sent by LibreChat with forwardUserToken)
+      # instead of the token above, so the hub applies that person's roles.
+      # Calls without one are refused. The hub's OIDC_AUDIENCE must name
+      # LibreChat's client.
+      asCaller: false
 
     # Read-only: config history (git log/diff on tracked YAML files) and
     # issue/ticket search across GitHub and self-hosted GitLab. No issue

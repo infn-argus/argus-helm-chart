@@ -132,6 +132,9 @@ data:
   {{- if .timeoutSeconds }}
   KNOWLEDGE_HUB_TIMEOUT_SECONDS: {{ .timeoutSeconds | quote }}
   {{- end }}
+  {{- if .asCaller }}
+  KNOWLEDGE_HUB_AS_CALLER: "true"
+  {{- end }}
   {{- end }}
 
   {{- if $b.git.github.baseUrl }}
