@@ -60,6 +60,15 @@ always the release namespace, standard Helm behavior.
 {{- end -}}
 
 {{/*
+The cluster-scoped node-reader ClusterRole(Binding) of argusMcp.rbac.nodeDiagnostics.
+Includes the release namespace: every beamline's release renders the same
+fullname, and cluster-scoped names must be unique in the cluster.
+*/}}
+{{- define "argus.mcp.nodeReaderName" -}}
+{{- printf "%s-%s-node-reader" (include "argus.mcp.fullname" .) (include "argus.mcp.namespace" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Namespace the RBAC Role grants pod access to — this is about IOCs the
 Kubernetes provider watches, which may be a *different* namespace than
 where the ARGUS pod itself runs (e.g. ARGUS lives in "mcp-system", IOCs
