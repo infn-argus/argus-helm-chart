@@ -86,6 +86,13 @@ data:
   {{- end }}
   LOKI_DEFAULT_LIMIT: {{ $b.loki.defaultLimit | quote }}
 
+  {{- with $b.prometheus }}
+  {{- if .baseUrl }}
+  PROMETHEUS_BASE_URL: {{ .baseUrl | quote }}
+  PROMETHEUS_TIMEOUT_SECONDS: {{ .timeoutSeconds | default 10 | quote }}
+  {{- end }}
+  {{- end }}
+
   DOCUMENTATION_BACKEND: {{ $b.documentation.backend | quote }}
   DOCS_PATH: {{ $b.documentation.docsPath | quote }}
   DOCS_INDEX_PATH: {{ $b.documentation.indexPath | quote }}

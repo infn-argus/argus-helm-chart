@@ -148,10 +148,23 @@ than erroring; see that repo's `docs/providers.md`).
 - `argusMcp.image.repository` **must be set** — no default is assumed.
 - `argusMcp.backends.kubernetes` needs no kubeconfig: ARGUS runs under
   its own in-cluster ServiceAccount, scoped by this chart's RBAC to
-  `pods` (get/list/watch/delete) and `pods/log` (get) — nothing else.
+  `pods` (get/list/watch/delete), `pods/log` (get) and `events` (get/list)
+  in the beamline's namespace — nothing else.
   `argusMcp.rbac.clusterWide: true` switches from a namespaced
   Role/RoleBinding to a ClusterRole/ClusterRoleBinding for sites where
   IOCs span multiple namespaces.
+- `argusMcp.rbac.nodeDiagnostics` (default `true`) adds a separate,
+  read-only ClusterRole — `nodes` get/list and `pods` list, no write, exec,
+  logs or secrets — for `inspect_node`/`inspect_pod` (a node's conditions
+  and labels, every pod on it). It is named
+  `<fullname>-<namespace>-node-reader`, so each beamline's release gets its
+  own. Set it `false` and those report sections say "forbidden" instead.
+- `argusMcp.backends.prometheus.baseUrl` — the cluster's Prometheus
+  (kube-prometheus-stack), for the network/CPU sections of
+  `inspect_pod`/`inspect_node`.
+- `argusMcp.backends.kubernetes.iocLabelSelectorTemplate` — on epik8s,
+  `app.kubernetes.io/instance={ioc_name}` (what its ioc-chart labels IOC
+  pods with); the default `app=ioc,device={ioc_name}` matches no epik8s pod.
 
 ### `auth` — authentication
 

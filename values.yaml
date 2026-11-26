@@ -403,6 +403,12 @@ argusMcp:
     # true  = ClusterRole+ClusterRoleBinding, for sites where IOCs span
     #         multiple namespaces
     clusterWide: false
+    # Read-only ClusterRole (nodes get/list, pods list - no write, exec,
+    # logs or secrets) for inspect_node / inspect_pod: a node's conditions
+    # and labels, and every pod on it whatever the namespace. Without it
+    # those report sections say "forbidden" and the Prometheus ones still
+    # answer.
+    nodeDiagnostics: true
 
   logging:
     level: "INFO"
@@ -427,7 +433,20 @@ argusMcp:
       # chart's RBAC below) — no kubeconfig needed, this is the
       # recommended path for an in-cluster deployment
       namespaceDefault: ""
+      # How an IOC's pod is found. epik8s' ioc-chart labels them
+      # app.kubernetes.io/instance=<ioc>, so epik8s deployments set
+      # "app.kubernetes.io/instance={ioc_name}" (inspect_pod also falls back
+      # to that label on its own).
       iocLabelSelectorTemplate: "app=ioc,device={ioc_name}"
+
+    # The cluster's Prometheus (kube-prometheus-stack): node-exporter and
+    # cAdvisor metrics for inspect_pod / inspect_node - per-interface
+    # rates, drops and errors, UDP buffer overflows, CPU. Read-only, no
+    # auth in-cluster. Blank = those sections report "unconfigured".
+    #   http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+    prometheus:
+      baseUrl: ""
+      timeoutSeconds: 10
 
     argocd:
       serverUrl: ""

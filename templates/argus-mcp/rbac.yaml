@@ -1,9 +1,9 @@
 {{/*
 Scoped to exactly what argus-mcp-server's Kubernetes provider
 (providers/kubernetes/kubernetes.py in the sibling repo) actually calls:
-list/get pods (list_iocs, get_pod_for_ioc), get pod logs (get_pod_logs),
-delete pods (restart_ioc — a pod delete lets its controller recreate it).
-No write access to anything else.
+list/get pods (list_iocs, get_pod_for_ioc, inspect_pod), get pod logs
+(get_pod_logs), delete pods (restart_ioc — a pod delete lets its controller
+recreate it), list events (inspect_pod). No write access to anything else.
 */}}
 {{- if and .Values.argusMcp.enabled .Values.argusMcp.rbac.create }}
 {{- if .Values.argusMcp.rbac.clusterWide }}
@@ -20,6 +20,9 @@ rules:
   - apiGroups: [""]
     resources: ["pods/log"]
     verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -50,6 +53,9 @@ rules:
   - apiGroups: [""]
     resources: ["pods/log"]
     verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -62,6 +68,49 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: {{ include "argus.mcp.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "argus.mcp.fullname" . }}
+    namespace: {{ include "argus.mcp.namespace" . }}
+{{- end }}
+{{- if .Values.argusMcp.rbac.nodeDiagnostics }}
+{{/*
+Read-only cluster-scoped access for inspect_node / inspect_pod: a node's
+conditions, labels and capacity (nodes get/list), and every pod scheduled
+on a node whatever its namespace (pods list - the "what else shares this
+node" question). Kept apart from the Role above on purpose: the beamline's
+delete (restart_ioc) stays namespaced, this grants no write, no exec, no
+logs and no secrets anywhere.
+
+Cluster-scoped names must be unique in the cluster, and every beamline's
+release renders the same fullname (argus-argus-helm-chart-argus-mcp in
+sparc, btf, euaps...), so the namespace is part of the name.
+*/}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "argus.mcp.nodeReaderName" . }}
+  labels:
+    {{- include "argus.mcp.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "argus.mcp.nodeReaderName" . }}
+  labels:
+    {{- include "argus.mcp.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "argus.mcp.nodeReaderName" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "argus.mcp.fullname" . }}
