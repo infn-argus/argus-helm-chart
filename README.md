@@ -159,6 +159,13 @@ than erroring; see that repo's `docs/providers.md`).
   and labels, every pod on it). It is named
   `<fullname>-<namespace>-node-reader`, so each beamline's release gets its
   own. Set it `false` and those report sections say "forbidden" instead.
+- `argusMcp.rbac.iocExec` (default `false`) adds `pods/exec` in the beamline
+  namespace for `check_connectivity`: it pings and port-tests an IOC's devices
+  from inside the IOC's own pod, the only place devices on private networks
+  (power-supply LANs, camera VLANs) can be reached from. ARGUS runs only its
+  fixed read-only probe, but Kubernetes cannot limit which command an exec
+  runs, so this lets the ServiceAccount exec into any pod of that namespace.
+  Without it the check runs from ARGUS's own pod and says it is not conclusive.
 - `argusMcp.backends.prometheus.baseUrl` — the cluster's Prometheus
   (kube-prometheus-stack), for the network/CPU sections of
   `inspect_pod`/`inspect_node`.

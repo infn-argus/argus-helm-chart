@@ -409,6 +409,15 @@ argusMcp:
     # those report sections say "forbidden" and the Prometheus ones still
     # answer.
     nodeDiagnostics: true
+    # pods/exec in the beamline namespace, for check_connectivity: it pings
+    # and port-tests an IOC's devices from inside the IOC's own pod, the only
+    # place devices on private networks (power-supply LANs, camera VLANs) can
+    # be reached from. ARGUS only ever runs its fixed probe (ping, TCP
+    # connect, one GigE register read), but Kubernetes can't restrict which
+    # command an exec runs: this lets the ServiceAccount exec into any pod of
+    # the namespace. Off by default; without it the check runs from ARGUS's
+    # own pod only and says so.
+    iocExec: false
 
   logging:
     level: "INFO"
