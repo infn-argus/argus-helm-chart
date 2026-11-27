@@ -166,6 +166,13 @@ than erroring; see that repo's `docs/providers.md`).
   fixed read-only probe, but Kubernetes cannot limit which command an exec
   runs, so this lets the ServiceAccount exec into any pod of that namespace.
   Without it the check runs from ARGUS's own pod and says it is not conclusive.
+- `argusMcp.rbac.leftoverDetection` (default `true`) lets `find_leftover_iocs`
+  list the namespace's StatefulSets, Deployments and ConfigMaps, and read ArgoCD
+  Applications in `argusMcp.rbac.argocdNamespace` (a Role there, named per
+  beamline namespace). Applications carry their Helm values, which this exposes
+  to ARGUS read-only. `argusMcp.rbac.leftoverCleanup` (default `false`) adds
+  scale and delete on StatefulSets/Deployments for `remove_leftover_ioc`, which
+  is always confirmed and refuses managed IOCs.
 - `argusMcp.backends.prometheus.baseUrl` — the cluster's Prometheus
   (kube-prometheus-stack), for the network/CPU sections of
   `inspect_pod`/`inspect_node`.

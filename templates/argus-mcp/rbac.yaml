@@ -25,6 +25,26 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
+  {{- if .Values.argusMcp.rbac.leftoverDetection }}
+  # find_leftover_iocs: the ioc-chart StatefulSets/Deployments, and the
+  # config each IOC was deployed with (ioc-chart ConfigMaps), read-only.
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "deployments"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+  {{- end }}
+  {{- if .Values.argusMcp.rbac.leftoverCleanup }}
+  # remove_leftover_ioc (always confirmed; refuses managed IOCs): scale a
+  # leftover to 0, or delete it.
+  - apiGroups: ["apps"]
+    resources: ["statefulsets/scale", "deployments/scale"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "deployments"]
+    verbs: ["delete"]
+  {{- end }}
   {{- if .Values.argusMcp.rbac.iocExec }}
   # check_connectivity runs a fixed, read-only network probe inside an IOC's
   # pod (its private device networks are only reachable from there).
@@ -66,6 +86,26 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["get", "list"]
+  {{- if .Values.argusMcp.rbac.leftoverDetection }}
+  # find_leftover_iocs: the ioc-chart StatefulSets/Deployments, and the
+  # config each IOC was deployed with (ioc-chart ConfigMaps), read-only.
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "deployments"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+  {{- end }}
+  {{- if .Values.argusMcp.rbac.leftoverCleanup }}
+  # remove_leftover_ioc (always confirmed; refuses managed IOCs): scale a
+  # leftover to 0, or delete it.
+  - apiGroups: ["apps"]
+    resources: ["statefulsets/scale", "deployments/scale"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "deployments"]
+    verbs: ["delete"]
+  {{- end }}
   {{- if .Values.argusMcp.rbac.iocExec }}
   # check_connectivity runs a fixed, read-only network probe inside an IOC's
   # pod (its private device networks are only reachable from there).
@@ -86,6 +126,41 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: {{ include "argus.mcp.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "argus.mcp.fullname" . }}
+    namespace: {{ include "argus.mcp.namespace" . }}
+{{- end }}
+{{- if .Values.argusMcp.rbac.leftoverDetection }}
+{{/*
+find_leftover_iocs checks that the ArgoCD Application an IOC workload's
+tracking annotation names still exists: read-only access to Applications in
+ArgoCD's namespace. Named per beamline namespace, like the node reader.
+*/}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "argus.mcp.fullname" . }}-{{ include "argus.mcp.watchedNamespace" . }}-argocd-apps
+  namespace: {{ .Values.argusMcp.rbac.argocdNamespace }}
+  labels:
+    {{- include "argus.mcp.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "argus.mcp.fullname" . }}-{{ include "argus.mcp.watchedNamespace" . }}-argocd-apps
+  namespace: {{ .Values.argusMcp.rbac.argocdNamespace }}
+  labels:
+    {{- include "argus.mcp.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "argus.mcp.fullname" . }}-{{ include "argus.mcp.watchedNamespace" . }}-argocd-apps
 subjects:
   - kind: ServiceAccount
     name: {{ include "argus.mcp.fullname" . }}
