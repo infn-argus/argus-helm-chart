@@ -409,6 +409,26 @@ argusMcp:
     # those report sections say "forbidden" and the Prometheus ones still
     # answer.
     nodeDiagnostics: true
+    # pods/exec in the beamline namespace, for check_connectivity: it pings
+    # and port-tests an IOC's devices from inside the IOC's own pod, the only
+    # place devices on private networks (power-supply LANs, camera VLANs) can
+    # be reached from. ARGUS only ever runs its fixed probe (ping, TCP
+    # connect, one GigE register read), but Kubernetes can't restrict which
+    # command an exec runs: this lets the ServiceAccount exec into any pod of
+    # the namespace. Off by default; without it the check runs from ARGUS's
+    # own pod only and says so.
+    iocExec: false
+    # find_leftover_iocs (read-only): list ioc-chart StatefulSets/Deployments
+    # and ConfigMaps in the beamline namespace, and ArgoCD Applications in
+    # argocdNamespace (to tell an IOC whose app was deleted from a managed one).
+    # Note: ArgoCD Applications carry their Helm values; this lets ARGUS read them.
+    leftoverDetection: true
+    argocdNamespace: argocd
+    # remove_leftover_ioc: scale a leftover IOC workload to 0 or delete it
+    # (always confirmed; refuses anything managed). Write access to every
+    # StatefulSet/Deployment of the namespace - Kubernetes can't scope it to
+    # leftovers - so off by default.
+    leftoverCleanup: false
 
   logging:
     level: "INFO"
