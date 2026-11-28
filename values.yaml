@@ -396,6 +396,19 @@ argusMcp:
   #  limits: { cpu: 500m, memory: 512Mi }
   #  requests: { cpu: 100m, memory: 256Mi }
 
+  # Daily operations report (argus.report_cli daily): the previous UTC day's facts from the
+  # archiver, for the PVs in the beamline repo's deploy/argus-report.yaml, posted to Olog as
+  # the robot account in the Secret secretName (keys username, password; created by hand,
+  # never in git) into that file's logbooks.report.
+  dailyReport:
+    enabled: false
+    schedule: "30 1 * * *"     # after the UTC day it reports on has ended
+    timeZone: "UTC"
+    secretName: argus-olog-report
+    args: ["daily", "--post"]
+    activeDeadlineSeconds: 3600
+    resources: {}
+
   rbac:
     create: true
     # false = namespaced Role+RoleBinding scoped to kubernetes.namespaceDefault

@@ -1,0 +1,63 @@
+{{- if and .Values.argusMcp.enabled .Values.argusMcp.dailyReport.enabled }}
+{{- $r := .Values.argusMcp.dailyReport }}
+# The daily operations report: computes the previous UTC day's facts from the archiver
+# for the PVs in the beamline repo's deploy/argus-report.yaml and posts them to Olog as
+# the robot account in the Secret {{ $r.secretName }} (keys username, password).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "argus.mcp.fullname" . }}-daily-report
+  namespace: {{ include "argus.mcp.namespace" . }}
+  labels:
+    {{- include "argus.mcp.labels" . | nindent 4 }}
+spec:
+  schedule: {{ $r.schedule | quote }}
+  {{- with $r.timeZone }}
+  timeZone: {{ . | quote }}
+  {{- end }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: {{ $r.activeDeadlineSeconds }}
+      template:
+        metadata:
+          labels:
+            # Not the server's labels: its Service selects on them, and must not route to a report job.
+            app.kubernetes.io/name: argus-daily-report
+            app.kubernetes.io/instance: {{ .Release.Name }}
+            app.kubernetes.io/part-of: argus
+        spec:
+          restartPolicy: Never
+          serviceAccountName: {{ include "argus.mcp.fullname" . }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: daily-report
+              image: "{{ .Values.argusMcp.image.repository }}:{{ .Values.argusMcp.image.tag }}"
+              imagePullPolicy: {{ .Values.argusMcp.image.pullPolicy }}
+              command: ["python", "-u", "-m", "argus.report_cli"]
+              args:
+                {{- toYaml $r.args | nindent 16 }}
+              envFrom:
+                - configMapRef:
+                    name: {{ include "argus.mcp.fullname" . }}-env
+              env:
+                {{- include "argus.mcp.env" . | trim | nindent 16 }}
+                - name: ARGUS_REPORT_LOGBOOK_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $r.secretName }}
+                      key: username
+                - name: ARGUS_REPORT_LOGBOOK_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $r.secretName }}
+                      key: password
+              resources:
+                {{- toYaml $r.resources | nindent 16 }}
+{{- end }}

@@ -136,3 +136,75 @@ Usage: {{ include "argus.secretValue" (list $ "JWT_SECRET" (randAlphaNum 64)) }}
 {{- $fallback -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Backend credentials of the ARGUS server, as container env: shared by the server
+Deployment and the daily-report CronJob so the two cannot drift apart.
+*/}}
+{{- define "argus.mcp.env" -}}
+{{- $b := .Values.argusMcp.backends -}}
+{{- if $b.channelfinder.passwordSecretKey }}
+- name: CHANNELFINDER_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.channelfinder.passwordSecretKey }}
+      optional: true
+{{- end }}
+{{- if $b.argocd.authTokenSecretKey }}
+- name: ARGOCD_AUTH_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.argocd.authTokenSecretKey }}
+      optional: true
+{{- end }}
+{{- if $b.logbook.passwordSecretKey }}
+- name: LOGBOOK_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.logbook.passwordSecretKey }}
+      optional: true
+{{- end }}
+{{- if $b.elastic.apiKeySecretKey }}
+- name: ELASTIC_API_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.elastic.apiKeySecretKey }}
+      optional: true
+{{- end }}
+{{- if $b.git.github.tokenSecretKey }}
+- name: GITHUB_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.git.github.tokenSecretKey }}
+      optional: true
+{{- end }}
+{{- if $b.git.gitlab.tokenSecretKey }}
+- name: GITLAB_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.git.gitlab.tokenSecretKey }}
+      optional: true
+{{- end }}
+{{- if (($b.knowledgeHub).tokenSecretKey) }}
+- name: KNOWLEDGE_HUB_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.knowledgeHub.tokenSecretKey }}
+      optional: true
+{{- end }}
+{{- if $b.ragflow.apiKeySecretKey }}
+- name: RAGFLOW_API_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.resourceNames.credentialsSecret }}
+      key: {{ $b.ragflow.apiKeySecretKey }}
+      optional: true
+{{- end }}
+{{- end }}
